@@ -1,0 +1,30 @@
+{
+  "app_type": "marketplace",
+  "app_name": "CasaDirecta",
+  "tagline": "Vende y compra viviendas sin comisiones de terceros",
+  "primary_color": "#1E3A5F",
+  "accent_color": "#27AE60",
+  "sections": [
+    "Hero",
+    "Search y filtros",
+    "Listados de viviendas",
+    "Detalle de propiedad",
+    "Testimonios",
+    "FAQ",
+    "Contacto"
+  ],
+  "backend_resources": [
+    "propiedades",
+    "usuarios",
+    "transacciones",
+    "imagenes",
+    "consultas"
+  ],
+  "features": [
+    "Búsqueda avanzada con filtros por precio, ubicación, tipo",
+    "Publicación directa de propiedades sin comisiones",
+    "Perfiles de vendedor y comprador",
+    "Alertas de propiedades coincidentes",
+    "Mensajería entre partes"
+  ]
+}
