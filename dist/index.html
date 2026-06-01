@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CasaDirecta</title>
+  <script>window.__BACKEND_URL__ = '/api/companies/Inmobiliaria/app';</script>
+  <script>window.__COMPANY_SLUG__ = 'Inmobiliaria';</script>
+  <!-- Show any JS errors visibly instead of a blank page -->
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      var el = document.getElementById('root');
+      if (el) el.innerHTML = '<div style="padding:32px;font-family:monospace;background:#0f1117;color:#f87171;min-height:100vh"><h2 style=\"color:#fb923c;margin-bottom:12px\">&#9888; App Error</h2><pre style=\"white-space:pre-wrap;word-break:break-all\">' + (err ? err.stack || err.message : msg) + '</pre></div>';
+      return false;
+    };
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: '#1E3A5F', accent: '#27AE60' } } }
+    };
+  </script>
+  <!-- Library stubs: lucide-react icons, framer-motion, recharts -->
+  <script>
+  (function() {
+    // Lucide-react: stub all icon names as simple inline boxes
+        var _Ico = function(p) {
+            p = p || {};
+            var s = p.size || p.width || 16;
+      return React.createElement('span', {
+        title: p.title || '',
+        style: {display:'inline-flex',alignItems:'center',justifyContent:'center',
+                 width:s,height:s,opacity:0.7,flexShrink:0},
+        dangerouslySetInnerHTML: {__html: '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'}
+      });
+    };
+    ["Activity","AlertCircle","AlertTriangle","ArrowDown","ArrowDownRight","ArrowLeft","ArrowRight","ArrowUp","ArrowUpRight","BarChart","BarChart2","BarChart3","Bell","Bookmark","Box","Briefcase","Calendar","Camera","Check","CheckCircle","ChevronDown","ChevronLeft","ChevronRight","ChevronUp","Circle","Clock","Cloud","Code","Command","Copy","CreditCard","Database","Delete","Download","Edit","ExternalLink","Eye","EyeOff","File","FileText","Filter","Flag","Folder","Globe","Grid","Hash","Heart","HelpCircle","Home","Image","Info","Layers","Layout","LayoutDashboard","Link","List","Loader","Lock","LogIn","LogOut","Mail","Map","MapPin","Menu","MessageCircle","MessageSquare","Minus","Monitor","Moon","MoreHorizontal","MoreVertical","Move","Music","Package","PenTool","Percent","Phone","PieChart","Play","Plus","Power","Printer","RefreshCw","Save","Search","Send","Server","Settings","Share","Shield","ShoppingBag","ShoppingCart","Sidebar","Sliders","Star","Sun","Table","Tag","Target","Trash","Trash2","TrendingDown","TrendingUp","Twitter","Type","Unlock","Upload","User","UserCheck","UserMinus","UserPlus","Users","Video","Volume","Volume2","Watch","Wifi","X","XCircle","Youtube","Zap","ZoomIn","ZoomOut"].forEach(function(n) { window[n] = _Ico; });
+
+    // framer-motion: pass-through (strips animation props)
+    var _animProps = new Set(['initial','animate','exit','transition','variants',
+      'whileHover','whileTap','whileFocus','layout','layoutId','drag','dragConstraints']);
+    var _motionEl = function(tag) {
+      return React.forwardRef(function(props, ref) {
+        var clean = {};
+        Object.keys(props).forEach(function(k) { if (!_animProps.has(k)) clean[k] = props[k]; });
+        clean.ref = ref;
+        return React.createElement(tag, clean);
+      });
+    };
+    window.motion = new Proxy({}, { get: function(_, tag) { return _motionEl(tag); } });
+    window.AnimatePresence = function(p) { return p.children || null; };
+
+    // recharts: stub chart components as empty divs with a label
+    ['LineChart','BarChart','PieChart','AreaChart','RadarChart','ScatterChart',
+     'ComposedChart','ResponsiveContainer','XAxis','YAxis','CartesianGrid',
+     'Tooltip','Legend','Line','Bar','Pie','Area','Cell','Radar','Scatter',
+     'ReferenceLine','ReferenceArea'].forEach(function(n) {
+      window[n] = function(p) {
+        return React.createElement('div', {
+          style:{border:'1px dashed #444',borderRadius:6,padding:8,
+                  color:'#888',fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',
+                  minHeight: p.height || 200},
+          className: p.className
+        }, n + ' (chart)');
+      };
+    });
+  })();
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #06080f; color: #f1f5f9; font-family: system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
+    #root { min-height: 100vh; }
+    #_cdn-loading { position:fixed;top:0;left:0;right:0;bottom:0;background:#06080f;
+      display:flex;align-items:center;justify-content:center;z-index:9999;
+      font-family:system-ui;color:#94a3b8;font-size:14px; }
+  </style>
+</head>
+<body>
+<div id="_cdn-loading">Loading CasaDirecta…</div>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback, useMemo, useRef, createContext,
+        useContext, useReducer, Fragment } = React;
+const BASE = window.__BACKEND_URL__ || '';
+
+async function apiFetch(path, opts) {
+  opts = opts || {};
+  for (var i = 0; i < 3; i++) {
+    try {
+      var r = await fetch(BASE + path, opts);
+      if (r.ok) return r.json();
+    } catch(_) {}
+    await new Promise(function(res) { setTimeout(res, 1500); });
+  }
+  return null;
+}
+
+function App() {
+  const [currentPage, setCurrentPage] = useState('listings');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const [minBeds, setMinBeds] = useState(0);
+  const [minBaths, setMinBaths] = useState(0);
+  const [ratingFilter, setRatingFilter] = useState(0);
+  const [sortBy, setSortBy] = useState('recent');
+  const [viewMode, setViewMode] = useState('grid');
+  const [currentFeatured, setCurrentFeatured] = useState(0);
+  const [showFilters, setShowFilters] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // Mock data
+  const mockListings = useMemo(() => [
+    { id: 1, title: 'Ático de lujo en el centro', address: 'Calle Gran Vía 45, Madrid', price: 450000, bedrooms: 3, bathrooms: 2, area: 120, type: 'apartment', rating: 4.8, reviews: 24, featured: true, image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400', seller: 'María García', phone: '+34 612 345 678', email: 'maria@casadirecta.com', description: 'Espectacular ático reformado con vistas panorámicas. Calefacción por suelo radiante, cocina equipada, terraza de 40m².' },
+    { id: 2, title: 'Casa adosada con piscina', address: 'Urbanización Los Olivos 12, Barcelona', price: 520000, bedrooms: 4, bathrooms: 3, area: 180, type: 'house', rating: 4.6, reviews: 18, featured: true, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400', seller: 'Carlos López', phone: '+34 623 456 789', email: 'carlos@casadirecta.com', description: 'Preciosa casa con jardín y piscina privada. Amplio salón con chimenea, cocina americana, y garaje para dos coches.' },
+    { id: 3, title: 'Estudio céntrico', address: 'Calle Serrano 23, Valencia', price: 150000, bedrooms: 1, bathrooms: 1, area: 45, type: 'apartment', rating: 4.2, reviews: 12, featured: true, image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400', seller: 'Ana Martínez', phone: '+34 634 567 890', email: 'ana@casadirecta.com', description: 'Estudio completamente amueblado en el centro histórico. Ideal para inversión o primera vivienda.' },
+    { id: 4, title: 'Local comercial', address: 'Avenida Diagonal 340, Barcelona', price: 280000, bedrooms: 0, bathrooms: 1, area: 90, type: 'commercial', rating: 4.4, reviews: 8, featured: false, image: 'https://images.unsplash.com/photo-1600566753376-12c8ab7a8b0b?w=400', seller: 'Roberto Díaz', phone: '+34 645 678 901', email: 'roberto@casadirecta.com', description: 'Local comercial en plena Diagonal. Escaparate amplio, trastero, y baño. Perfecto para restaurante o tienda.' },
+    { id: 5, title: 'Piso reformado', address: 'Calle Alcalá 78, Madrid', price: 320000, bedrooms: 3, bathrooms: 2, area: 100, type: 'apartment', rating: 4.7, reviews: 32, featured: false, image: 'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=400', seller: 'Laura Sánchez', phone: '+34 656 789 012', email: 'laura@casadirecta.com', description: 'Piso recién reformado con materiales de alta calidad. Cocina abierta, dos baños completos, y trastero.' },
+    { id: 6, title: 'Chalet independiente', address: 'Calle Mayor 15, Marbella', price: 680000, bedrooms: 5, bathrooms: 4, area: 250, type: 'house', rating: 4.9, reviews: 45, featured: false, image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400', seller: 'Pedro Ruiz', phone: '+34 667 890 123', email: 'pedro@casadirecta.com', description: 'Impresionante chalet con piscina climatizada, spa, y jardín tropical. Cinco dormitorios con baño en suite.' },
+    { id: 7, title: 'Oficina en zona prime', address: 'Paseo de la Castellana 200, Madrid', price: 390000, bedrooms: 0, bathrooms: 2, area: 150, type: 'commercial', rating: 4.3, reviews: 15, featured: false, image: 'https://images.unsplash.com/photo-1600607687644-c94bf5562e2a?w=400', seller: 'Sofia Torres', phone: '+34 678 901 234', email: 'sofia@casadirecta.com', description: 'Oficina diáfana en el corazón financiero. Luz natural, aire acondicionado, y parking incluido.' },
+    { id: 8, title: 'Ático dúplex', address: 'Calle Sierpes 5, Sevilla', price: 410000, bedrooms: 4, bathrooms: 3, area: 160, type: 'apartment', rating: 4.5, reviews: 22, featured: false, image: 'https://images.unsplash.com/photo-1600566753086-00f18f6e4b1a?w=400', seller: 'Javier Moreno', phone: '+34 689 012 345', email: 'javier@casadirecta.com', description: 'Dúplex con terraza y vistas a la Giralda. Calidad superior, piscina comunitaria y padel.' },
+    { id: 9, title: 'Casa rural con encanto', address: 'Camino del Molino 3, Ronda', price: 250000, bedrooms: 4, bathrooms: 2, area: 200, type: 'house', rating: 4.1, reviews: 10, featured: false, image: 'https://images.unsplash.com/photo-1600585152220-903f3e7b5a0c?w=400', seller: 'Elena Vázquez', phone: '+34 690 123 456', email: 'elena@casadirecta.com', description: 'Antiguo molino restaurado con mucho encanto. Chimenea, vigas vistas, y huerto ecológico.' },
+    { id: 10, title: 'Piso económico', address: 'Calle León 8, Málaga', price: 120000, bedrooms: 2, bathrooms: 1, area: 65, type: 'apartment', rating: 3.9, reviews: 7, featured: false, image: 'https://images.unsplash.com/photo-1600566752374-a1f0e2717d3c?w=400', seller: 'David Flores', phone: '+34 601 234 567', email: 'david@casadirecta.com', description: 'Piso luminoso y económico. Ideal para parejas jóvenes. Cerca de transporte público y centros comerciales.' },
+  ], []);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      :root { --accent: #27AE60; --accent2: #1E3A5F; }
+      .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+      .gradient-text { background: linear-gradient(135deg, #27AE60, #1E3A5F, #2ECC71); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+      .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+      @keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+      @keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+      .fade-in { animation: fadeIn 0.3s ease forwards; }
+      .modal-backdrop { position: fixed; inset: 0; background: rgba(6,8,15,0.8); backdrop-filter: blur(4px); z-index: 50; animation: fadeIn 0.2s ease; }
+      .modal-content { animation: fadeIn 0.3s ease; }
+      .toast-enter { animation: slideIn 0.3s ease forwards; }
+      @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+      input[type="range"] { -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+      input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #27AE60; border-radius: 50%; cursor: pointer; }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
+  useEffect(() => {
+    if (currentPage === 'listings') {
+      setLoading(true);
+      setTimeout(() => {
+        setListings(mockListings);
+        setLoading(false);
+      }, 800);
+    }
+  }, [currentPage, mockListings]);
+
+  const filteredListings = useMemo(() => {
+    let result = [...listings];
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(l => l.title.toLowerCase().includes(q) || l.address.toLowerCase().includes(q));
+    }
+    if (categoryFilter !== 'all') {
+      result = result.filter(l => l.type === categoryFilter);
+    }
+    result = result.filter(l => l.price >= priceRange[0] && l.price <= priceRange[1]);
+    result = result.filter(l => l.bedrooms >= minBeds);
+    result = result.filter(l => l.bathrooms >= minBaths);
+    result = result.filter(l => l.rating >= ratingFilter);
+    if (sortBy === 'price-asc') result.sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-desc') result.sort((a, b) => b.price - a.price);
+    else if (sortBy === 'rating') result.sort((a, b) => b.rating - a.rating);
+    else result.sort((a, b) => b.id - a.id);
+    return result;
+  }, [listings, searchQuery, categoryFilter, priceRange, minBeds, minBaths, ratingFilter, sortBy]);
+
+  const featuredListings = useMemo(() => listings.filter(l => l.featured), [listings]);
+
+  const itemsPerPage = 6;
+  const totalPages = Math.ceil(filteredListings.length / itemsPerPage);
+  const [pageIndex, setPageIndex] = useState(1);
+  const paginatedListings = useMemo(() => {
+    const start = (pageIndex - 1) * itemsPerPage;
+    return filteredListings.slice(start, start + itemsPerPage);
+  }, [filteredListings, pageIndex]);
+
+  useEffect(() => {
+    setPageIndex(1);
+  }, [searchQuery, categoryFilter, priceRange, minBeds, minBaths, ratingFilter, sortBy]);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type, id: Date.now() });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
+  };
+
+  const renderStars = (rating) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map(star => (
+          <StarPanel key={star} size={14} className={star <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'} />
+        ))}
+        <span className="text-xs text-white/60 ml-1">({rating})</span>
+      </div>
+    );
+  };
+
+  const typeIcons = {
+    house: HomePanel,
+    apartment: Building2,
+    commercial: Warehouse,
+  };
+
+  const typeLabels = {
+    house: 'Casa',
+    apartment: 'Piso',
+    commercial: 'Local',
+  };
+
+  const Sidebar = () => {
+    const navItems = [
+      { icon: HomePanel, label: 'Explorar', page: 'listings' },
+      { icon: BellPanel, label: 'Alertas', page: 'alerts' },
+      { icon: PlusPanel, label: 'Publicar', page: 'publish' },
+      { icon: UserPanel, label: 'Perfil', page: 'profile' },
+    ];
+
+    return (
+      <aside className={`w-64 flex-shrink-0 flex flex-col border-r border-white/5 bg-white/[0.02] h-full transition-all duration-300 ${sidebarCollapsed ? 'w-16' : ''}`}>
+        <div className="px-6 py-5 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#27AE60] to-[#1E3A5F] flex items-center justify-center">
+              <HomePanel size={18} className="text-white" />
+            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <h1 className="text-lg font-semibold text-white">CasaDirecta</h1>
+                <p className="text-xs text-white/40">Sin comisiones</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <nav className="flex-1 p-3 space-y-1">
+          {navItems.map(item => (
+            <button
+              key={item.page}
+              onClick={() => { setCurrentPage(item.page); setSidebarCollapsed(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+                currentPage === item.page 
+                  ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <item.icon size={18} />
+              {!sidebarCollapsed && <span>{item.label}</span>}
+            </button>
+          ))}
+        </nav>
+        <div className="p-3 border-t border-white/5">
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-all text-sm"
+          >
+            <MenuPanel size={18} />
+            {!sidebarCollapsed && <span>Colapsar</span>}
+          </button>
+        </div>
+      </aside>
+    );
+  };
+
+  const TopBar = () => (
+    <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0 bg-[#06080f]/80 backdrop-blur-lg">
+      <div className="flex items-center gap-4 flex-1 max-w-2xl">
+        <div className="relative flex-1">
+          <SearchPanel size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Buscar por dirección, ciudad o tipo..."
+            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#27AE60]/50 focus:bg-white/10 transition-all"
+          />
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={e => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[#27AE60]/50 transition-all"
+        >
+          <option value="all">Todos</option>
+          <option value="apartment">Pisos</option>
+          <option value="house">Casas</option>
+          <option value="commercial">Locales</option>
+        </select>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+            showFilters ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' : 'text-white/60 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <FilterPanel size={16} />
+          Filtros
+        </button>
+        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-[#27AE60]/20 text-[#27AE60]' : 'text-white/40 hover:text-white'}`}
+          >
+            <Grid3X3 size={16} />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded transition-all ${viewMode === 'list' ? 'bg-[#27AE60]/20 text-[#27AE60]' : 'text-white/40 hover:text-white'}`}
+          >
+            <ListPanel size={16} />
+          </button>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-[#27AE60] hover:bg-[#219A52] text-white rounded-lg text-sm font-medium transition-all">
+          <PlusPanel size={16} />
+          Publicar
+        </button>
+      </div>
+    </header>
+  );
+
+  const FeaturedCarousel = () => {
+    useEffect(() => {
+      if (featuredListings.length === 0) return;
+      const interval = setInterval(() => {
+        setCurrentFeatured(prev => (prev + 1) % featuredListings.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }, [featuredListings]);
+
+    if (featuredListings.length === 0) return null;
+
+    return (
+      <div className="glass p-4 mb-6 fade-in">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-white/80">Destacados</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCurrentFeatured(prev => (prev - 1 + featuredListings.length) % featuredListings.length)} className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-all">
+              <ChevronLeftPanel size={16} />
+            </button>
+            <button onClick={() => setCurrentFeatured(prev => (prev + 1) % featuredListings.length)} className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-all">
+              <ChevronRightPanel size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="relative overflow-hidden">
+          <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${currentFeatured * 100}%)` }}>
+            {featuredListings.map(listing => (
+              <div key={listing.id} className="min-w-full flex gap-4">
+                <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
+                  <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 flex flex-col justify-center">
+                  <h3 className="text-lg font-semibold text-white">{listing.title}</h3>
+                  <p className="text-sm text-white/60 flex items-center gap-1 mt-1">
+                    <MapPinPanel size={14} />
+                    {listing.address}
+                  </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-xl font-bold text-[#27AE60]">{formatPrice(listing.price)}</span>
+                    {renderStars(listing.rating)}
+                  </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    {listing.bedrooms > 0 && <span className="text-xs text-white/40 flex items-center gap-1"><Bed size={14} />{listing.bedrooms}</span>}
+                    {listing.bathrooms > 0 && <span className="text-xs text-white/40 flex items-center gap-1"><Bath size={14} />{listing.bathrooms}</span>}
+                    <span className="text-xs text-white/40 flex items-center gap-1"><Square size={14} />{listing.area}m²</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-center gap-2 mt-4">
+          {featuredListings.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentFeatured(idx)}
+              className={`w-2 h-2 rounded-full transition-all ${idx === currentFeatured ? 'bg-[#27AE60] w-6' : 'bg-white/20 hover:bg-white/40'}`}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const FilterSidebar = () => (
+    <div className={`w-72 flex-shrink-0 border-r border-white/5 bg-white/[0.01] p-4 overflow-y-auto transition-all duration-300 ${showFilters ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden p-0'}`}>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-sm font-medium text-white/80 mb-3">Tipo de propiedad</h3>
+          <div className="space-y-2">
+            {[
+              { value: 'all', label: 'Todos' },
+              { value: 'apartment', label: 'Pisos' },
+              { value: 'house', label: 'Casas' },
+              { value: 'commercial', label: 'Locales' },
+            ].map(option => (
+              <button
+                key={option.value}
+                onClick={() => setCategoryFilter(option.value)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                  categoryFilter === option.value 
+                    ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-white/80 mb-3">Rango de precio</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-white/40">Mínimo: {formatPrice(priceRange[0])}</label>
+              <input
+                type="range"
+                min={0}
+                max={1000000}
+                step={10000}
+                value={priceRange[0]}
+                onChange={e => setPriceRange([Number(e.target.value), priceRange[1]])}
+                className="w-full mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-white/40">Máximo: {formatPrice(priceRange[1])}</label>
+              <input
+                type="range"
+                min={0}
+                max={1000000}
+                step={10000}
+                value={priceRange[1]}
+                onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
+                className="w-full mt-1"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={priceRange[0]}
+                onChange={e => setPriceRange([Number(e.target.value), priceRange[1]])}
+                className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#27AE60]/50"
+                placeholder="0"
+              />
+              <span className="text-white/40">-</span>
+              <input
+                type="number"
+                value={priceRange[1]}
+                onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
+                className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#27AE60]/50"
+                placeholder="1.000.000"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-white/80 mb-3">Habitaciones</h3>
+          <div className="flex gap-2">
+            {[0, 1, 2, 3, 4].map(n => (
+              <button
+                key={n}
+                onClick={() => setMinBeds(n)}
+                className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
+                  minBeds === n 
+                    ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
+                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {n === 0 ? '+' : n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-white/80 mb-3">Baños</h3>
+          <div className="flex gap-2">
+            {[0, 1, 2, 3, 4].map(n => (
+              <button
+                key={n}
+                onClick={() => setMinBaths(n)}
+                className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
+                  minBaths === n 
+                    ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
+                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {n === 0 ? '+' : n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-white/80 mb-3">Valoración</h3>
+          <div className="space-y-1">
+            {[0, 3, 3.5, 4, 4.5].map(rating => (
+              <button
+                key={rating}
+                onClick={() => setRatingFilter(rating)}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all ${
+                  ratingFilter === rating 
+                    ? 'bg-[#27AE60]/10 text-[#27AE60]' 
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {rating === 0 ? 'Cualquiera' : renderStars(rating)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ListingCard = ({ listing }) => {
+    const TypeIcon = typeIcons[listing.type] || Building2;
+    const [imgLoaded, setImgLoaded] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+
+    return (
+      <div
+        onClick={() => setSelectedListing(listing)}
+        className={`glass overflow-hidden cursor-pointer group transition-all duration-200 hover:bg-white/[0.06] hover:border-white/20 fade-in`}
+        style={{ animationDelay: `${listing.id * 0.05}s` }}
+      >
+        <div className="relative h-48 bg-white/5 overflow-hidden">
+          {!imgLoaded && <div className="absolute inset-0 shimmer" />}
+          <img
+            src={listing.image}
+            alt={listing.title}
+            onLoad={() => setImgLoaded(true)}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          />
+          <div className="absolute top-3 right-3 flex gap-2">
+            {listing.featured && (
+              <span className="px-2 py-0.5 bg-[#27AE60]/80 text-white text-xs rounded-full backdrop-blur-sm">Destacado</span>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); showToast(isSaved ? 'Eliminado de favoritos' : 'Guardado en favoritos'); }}
+              className="p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
+            >
+              <HeartPanel size={16} className={isSaved ? 'fill-red-500 text-red-500' : 'text-white'} />
+            </button>
+          </div>
+          <div className="absolute bottom-3 left-3">
+            <span className="px-2 py-0.5 bg-black/40 backdrop-blur-sm text-white text-xs rounded-full flex items-center gap-1">
+              <TypeIcon size={12} />
+              {typeLabels[listing.type]}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="flex items-start justify-between">
+            <h3 className="text-sm font-semibold text-white group-hover:text-[#27AE60] transition-colors">{listing.title}</h3>
+          </div>
+          <p className="text-xs text-white/50 flex items-center gap-1">
+            <MapPinPanel size={12} />
+            {listing.address}
+          </p>
+          <div className="flex items-center gap-2 text-xs text-white/40">
+            {listing.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} />{listing.bedrooms}</span>}
+            {listing.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} />{listing.bathrooms}</span>}
+            <span className="flex items-center gap-1"><Square size={14} />{listing.area}m²</span>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-white/5">
+            <span className="text-lg font-bold text-[#27AE60]">{formatPrice(listing.price)}</span>
+            {renderStars(listing.rating)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ListingRow = ({ listing }) => {
+    const TypeIcon = typeIcons[listing.type] || Building2;
+    const [isSaved, setIsSaved] = useState(false);
+
+    return (
+      <div
+        onClick={() => setSelectedListing(listing)}
+        className="glass flex gap-4 p-4 cursor-pointer group transition-all duration-200 hover:bg-white/[0.06] hover:border-white/20 fade-in"
+        style={{ animationDelay: `${listing.id * 0.05}s` }}
+      >
+        <div className="w-40 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
+          <img src={listing.image} alt={listing.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        </div>
+        <div className="flex-1 flex flex-col justify-between">
+          <div>
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-white group-hover:text-[#27AE60] transition-colors">{listing.title}</h3>
+                <p className="text-xs text-white/50 flex items-center gap-1 mt-1">
+                  <MapPinPanel size={12} />
+                  {listing.address}
+                </p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); showToast(isSaved ? 'Eliminado de favoritos' : 'Guardado en favoritos'); }}
+                className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
+              >
+                <HeartPanel size={16} className={isSaved ? 'fill-red-500 text-red-500' :
+
+// Hide loading overlay and render
+var _loading = document.getElementById('_cdn-loading');
+if (_loading) _loading.style.display = 'none';
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(React.StrictMode, null, React.createElement(App))
+);
+</script>
+</body>
+</html>
