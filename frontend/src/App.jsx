@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight, Star, Heart, MapPin, Home, Building2, Warehouse, Bed, Bath, Square, ArrowUpDown, Bell, User, Plus, Menu, ChevronDown, Filter, Grid3X3, List, Eye, Phone, Mail, Clock, Shield, Check, AlertCircle } from 'lucide-react'
+import { Search, SlidersHorizontal, Star, ChevronLeft, ChevronRight, X, MapPin, Home, DollarSign, Maximize, Heart, Share2, Clock, Shield, TrendingUp, Users, Building, Filter, Grid3X3, List, ArrowUpDown } from 'lucide-react'
 
 const BASE = window.__BACKEND_URL__ || '';
 
@@ -14,511 +14,405 @@ async function apiFetch(path, opts = {}) {
   return null;
 }
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('listings');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedListing, setSelectedListing] = useState(null);
-  const [priceRange, setPriceRange] = useState([0, 1000000]);
-  const [minBeds, setMinBeds] = useState(0);
-  const [minBaths, setMinBaths] = useState(0);
-  const [ratingFilter, setRatingFilter] = useState(0);
-  const [sortBy, setSortBy] = useState('recent');
-  const [viewMode, setViewMode] = useState('grid');
-  const [currentFeatured, setCurrentFeatured] = useState(0);
-  const [showFilters, setShowFilters] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [toast, setToast] = useState(null);
+const mockListings = [
+  { id: 1, title: "Piso luminoso en el centro", price: 250000, location: "Madrid Centro", size: 85, bedrooms: 3, bathrooms: 2, rating: 4.8, category: "Pisos", image: "", featured: true, tags: ["Reformado", "Luminoso"], description: "Amplio piso completamente reformado con vistas espectaculares" },
+  { id: 2, title: "Ático con terraza", price: 320000, location: "Barcelona", size: 110, bedrooms: 3, bathrooms: 2, rating: 4.9, category: "Áticos", image: "", featured: true, tags: ["Terraza", "Vistas"], description: "Ático exclusivo con terraza privada de 30m²" },
+  { id: 3, title: "Casa adosada con jardín", price: 450000, location: "Valencia", size: 150, bedrooms: 4, bathrooms: 3, rating: 4.7, category: "Casas", image: "", featured: true, tags: ["Jardín", "Garaje"], description: "Casa adosada en zona residencial con amplio jardín" },
+  { id: 4, title: "Estudio céntrico", price: 120000, location: "Sevilla", size: 45, bedrooms: 1, bathrooms: 1, rating: 4.5, category: "Estudios", image: "", tags: ["Céntrico", "Amueblado"], description: "Estudio ideal para inversión en pleno centro histórico" },
+  { id: 5, title: "Dúplex con piscina", price: 380000, location: "Málaga", size: 130, bedrooms: 3, bathrooms: 2, rating: 4.6, category: "Dúplex", image: "", tags: ["Piscina", "Parking"], description: "Dúplex en urbanización con piscina comunitaria" },
+  { id: 6, title: "Local comercial", price: 180000, location: "Bilbao", size: 90, bedrooms: 0, bathrooms: 1, rating: 4.3, category: "Locales", image: "", tags: ["Esquina", "Acondicionado"], description: "Local comercial en esquina con gran visibilidad" },
+  { id: 7, title: "Chalet independiente", price: 650000, location: "Marbella", size: 200, bedrooms: 5, bathrooms: 3, rating: 4.9, category: "Chalets", image: "", tags: ["Lujo", "Piscina privada"], description: "Exclusivo chalet con piscina privada y vistas al mar" },
+  { id: 8, title: "Piso de obra nueva", price: 290000, location: "Madrid Norte", size: 95, bedrooms: 3, bathrooms: 2, rating: 4.7, category: "Pisos", image: "", tags: ["Obra nueva", "Garaje"], description: "Piso de obra nueva con acabados de alta calidad" },
+  { id: 9, title: "Casa rural con terreno", price: 220000, location: "Toledo", size: 180, bedrooms: 4, bathrooms: 2, rating: 4.4, category: "Casas", image: "", tags: ["Rural", "Tranquilo"], description: "Casa rural ideal para desconectar con parcela de 500m²" },
+  { id: 10, title: "Ático dúplex", price: 410000, location: "Valencia", size: 140, bedrooms: 4, bathrooms: 3, rating: 4.8, category: "Áticos", image: "", tags: ["Dúplex", "Terraza"], description: "Ático dúplex con terraza de 50m² y vistas al mar" },
+  { id: 11, title: "Piso económico", price: 85000, location: "Almería", size: 60, bedrooms: 2, bathrooms: 1, rating: 4.2, category: "Pisos", image: "", tags: ["Económico", "Céntrico"], description: "Piso económico ideal para primera vivienda" },
+  { id: 12, title: "Loft industrial", price: 195000, location: "Barcelona", size: 80, bedrooms: 2, bathrooms: 1, rating: 4.6, category: "Lofts", image: "", tags: ["Industrial", "Moderno"], description: "Loft estilo industrial con techos altos y luz natural" }
+];
 
-  // Mock data
-  const mockListings = useMemo(() => [
-    { id: 1, title: 'Ático de lujo en el centro', address: 'Calle Gran Vía 45, Madrid', price: 450000, bedrooms: 3, bathrooms: 2, area: 120, type: 'apartment', rating: 4.8, reviews: 24, featured: true, image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400', seller: 'María García', phone: '+34 612 345 678', email: 'maria@casadirecta.com', description: 'Espectacular ático reformado con vistas panorámicas. Calefacción por suelo radiante, cocina equipada, terraza de 40m².' },
-    { id: 2, title: 'Casa adosada con piscina', address: 'Urbanización Los Olivos 12, Barcelona', price: 520000, bedrooms: 4, bathrooms: 3, area: 180, type: 'house', rating: 4.6, reviews: 18, featured: true, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400', seller: 'Carlos López', phone: '+34 623 456 789', email: 'carlos@casadirecta.com', description: 'Preciosa casa con jardín y piscina privada. Amplio salón con chimenea, cocina americana, y garaje para dos coches.' },
-    { id: 3, title: 'Estudio céntrico', address: 'Calle Serrano 23, Valencia', price: 150000, bedrooms: 1, bathrooms: 1, area: 45, type: 'apartment', rating: 4.2, reviews: 12, featured: true, image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400', seller: 'Ana Martínez', phone: '+34 634 567 890', email: 'ana@casadirecta.com', description: 'Estudio completamente amueblado en el centro histórico. Ideal para inversión o primera vivienda.' },
-    { id: 4, title: 'Local comercial', address: 'Avenida Diagonal 340, Barcelona', price: 280000, bedrooms: 0, bathrooms: 1, area: 90, type: 'commercial', rating: 4.4, reviews: 8, featured: false, image: 'https://images.unsplash.com/photo-1600566753376-12c8ab7a8b0b?w=400', seller: 'Roberto Díaz', phone: '+34 645 678 901', email: 'roberto@casadirecta.com', description: 'Local comercial en plena Diagonal. Escaparate amplio, trastero, y baño. Perfecto para restaurante o tienda.' },
-    { id: 5, title: 'Piso reformado', address: 'Calle Alcalá 78, Madrid', price: 320000, bedrooms: 3, bathrooms: 2, area: 100, type: 'apartment', rating: 4.7, reviews: 32, featured: false, image: 'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=400', seller: 'Laura Sánchez', phone: '+34 656 789 012', email: 'laura@casadirecta.com', description: 'Piso recién reformado con materiales de alta calidad. Cocina abierta, dos baños completos, y trastero.' },
-    { id: 6, title: 'Chalet independiente', address: 'Calle Mayor 15, Marbella', price: 680000, bedrooms: 5, bathrooms: 4, area: 250, type: 'house', rating: 4.9, reviews: 45, featured: false, image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400', seller: 'Pedro Ruiz', phone: '+34 667 890 123', email: 'pedro@casadirecta.com', description: 'Impresionante chalet con piscina climatizada, spa, y jardín tropical. Cinco dormitorios con baño en suite.' },
-    { id: 7, title: 'Oficina en zona prime', address: 'Paseo de la Castellana 200, Madrid', price: 390000, bedrooms: 0, bathrooms: 2, area: 150, type: 'commercial', rating: 4.3, reviews: 15, featured: false, image: 'https://images.unsplash.com/photo-1600607687644-c94bf5562e2a?w=400', seller: 'Sofia Torres', phone: '+34 678 901 234', email: 'sofia@casadirecta.com', description: 'Oficina diáfana en el corazón financiero. Luz natural, aire acondicionado, y parking incluido.' },
-    { id: 8, title: 'Ático dúplex', address: 'Calle Sierpes 5, Sevilla', price: 410000, bedrooms: 4, bathrooms: 3, area: 160, type: 'apartment', rating: 4.5, reviews: 22, featured: false, image: 'https://images.unsplash.com/photo-1600566753086-00f18f6e4b1a?w=400', seller: 'Javier Moreno', phone: '+34 689 012 345', email: 'javier@casadirecta.com', description: 'Dúplex con terraza y vistas a la Giralda. Calidad superior, piscina comunitaria y padel.' },
-    { id: 9, title: 'Casa rural con encanto', address: 'Camino del Molino 3, Ronda', price: 250000, bedrooms: 4, bathrooms: 2, area: 200, type: 'house', rating: 4.1, reviews: 10, featured: false, image: 'https://images.unsplash.com/photo-1600585152220-903f3e7b5a0c?w=400', seller: 'Elena Vázquez', phone: '+34 690 123 456', email: 'elena@casadirecta.com', description: 'Antiguo molino restaurado con mucho encanto. Chimenea, vigas vistas, y huerto ecológico.' },
-    { id: 10, title: 'Piso económico', address: 'Calle León 8, Málaga', price: 120000, bedrooms: 2, bathrooms: 1, area: 65, type: 'apartment', rating: 3.9, reviews: 7, featured: false, image: 'https://images.unsplash.com/photo-1600566752374-a1f0e2717d3c?w=400', seller: 'David Flores', phone: '+34 601 234 567', email: 'david@casadirecta.com', description: 'Piso luminoso y económico. Ideal para parejas jóvenes. Cerca de transporte público y centros comerciales.' },
-  ], []);
+const categories = ["Todas", "Pisos", "Áticos", "Casas", "Chalets", "Estudios", "Dúplex", "Locales", "Lofts"];
 
+function QuickViewModal({ listing, onClose }) {
   useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = ':root { --accent: #00C9A7; --accent2: #1E3A5F; }';
-      document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
+    const handleEsc = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
 
-  useEffect(() => {
-    if (currentPage === 'listings') {
-      setLoading(true);
-      setTimeout(() => {
-        setListings(mockListings);
-        setLoading(false);
-      }, 800);
-    }
-  }, [currentPage, mockListings]);
+  if (!listing) return null;
 
-  const filteredListings = useMemo(() => {
-    let result = [...listings];
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(l => l.title.toLowerCase().includes(q) || l.address.toLowerCase().includes(q));
-    }
-    if (categoryFilter !== 'all') {
-      result = result.filter(l => l.type === categoryFilter);
-    }
-    result = result.filter(l => l.price >= priceRange[0] && l.price <= priceRange[1]);
-    result = result.filter(l => l.bedrooms >= minBeds);
-    result = result.filter(l => l.bathrooms >= minBaths);
-    result = result.filter(l => l.rating >= ratingFilter);
-    if (sortBy === 'price-asc') result.sort((a, b) => a.price - b.price);
-    else if (sortBy === 'price-desc') result.sort((a, b) => b.price - a.price);
-    else if (sortBy === 'rating') result.sort((a, b) => b.rating - a.rating);
-    else result.sort((a, b) => b.id - a.id);
-    return result;
-  }, [listings, searchQuery, categoryFilter, priceRange, minBeds, minBaths, ratingFilter, sortBy]);
-
-  const featuredListings = useMemo(() => listings.filter(l => l.featured), [listings]);
-
-  const itemsPerPage = 6;
-  const totalPages = Math.ceil(filteredListings.length / itemsPerPage);
-  const [pageIndex, setPageIndex] = useState(1);
-  const paginatedListings = useMemo(() => {
-    const start = (pageIndex - 1) * itemsPerPage;
-    return filteredListings.slice(start, start + itemsPerPage);
-  }, [filteredListings, pageIndex]);
-
-  useEffect(() => {
-    setPageIndex(1);
-  }, [searchQuery, categoryFilter, priceRange, minBeds, minBaths, ratingFilter, sortBy]);
-
-  const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type, id: Date.now() });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
-  };
-
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map(star => (
-          <StarPanel key={star} size={14} className={star <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'} />
-        ))}
-        <span className="text-xs text-white/60 ml-1">({rating})</span>
-      </div>
-    );
-  };
-
-  const typeIcons = {
-    house: HomePanel,
-    apartment: Building2,
-    commercial: Warehouse,
-  };
-
-  const typeLabels = {
-    house: 'Casa',
-    apartment: 'Piso',
-    commercial: 'Local',
-  };
-
-  const Sidebar = () => {
-    const navItems = [
-      { icon: HomePanel, label: 'Explorar', page: 'listings' },
-      { icon: BellPanel, label: 'Alertas', page: 'alerts' },
-      { icon: PlusPanel, label: 'Publicar', page: 'publish' },
-      { icon: UserPanel, label: 'Perfil', page: 'profile' },
-    ];
-
-    return (
-      <aside className={`w-64 flex-shrink-0 flex flex-col border-r border-white/5 bg-white/[0.02] h-full transition-all duration-300 ${sidebarCollapsed ? 'w-16' : ''}`}>
-        <div className="px-6 py-5 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#27AE60] to-[#1E3A5F] flex items-center justify-center">
-              <HomePanel size={18} className="text-white" />
-            </div>
-            {!sidebarCollapsed && (
-              <div>
-                <h1 className="text-lg font-semibold text-white">CasaDirecta</h1>
-                <p className="text-xs text-white/40">Sin comisiones</p>
-              </div>
-            )}
-          </div>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {navItems.map(item => (
-            <button
-              key={item.page}
-              onClick={() => { setCurrentPage(item.page); setSidebarCollapsed(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
-                currentPage === item.page 
-                  ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <item.icon size={18} />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </button>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-white/5">
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-all text-sm"
-          >
-            <MenuPanel size={18} />
-            {!sidebarCollapsed && <span>Colapsar</span>}
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-[#0a0e1a] border border-white/10 rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto fade-in" onClick={e => e.stopPropagation()}>
+        <div className="relative h-64 bg-gradient-to-br from-[#2E86AB]/20 to-[#F18F01]/20 flex items-center justify-center">
+          <div className="text-6xl opacity-30"><Building size={80} /></div>
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all">
+            <X size={20} />
           </button>
         </div>
-      </aside>
-    );
-  };
-
-  const TopBar = () => (
-    <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0 bg-[#06080f]/80 backdrop-blur-lg">
-      <div className="flex items-center gap-4 flex-1 max-w-2xl">
-        <div className="relative flex-1">
-          <SearchPanel size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Buscar por dirección, ciudad o tipo..."
-            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#27AE60]/50 focus:bg-white/10 transition-all"
-          />
-        </div>
-        <select
-          value={categoryFilter}
-          onChange={e => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[#27AE60]/50 transition-all"
-        >
-          <option value="all">Todos</option>
-          <option value="apartment">Pisos</option>
-          <option value="house">Casas</option>
-          <option value="commercial">Locales</option>
-        </select>
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-            showFilters ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' : 'text-white/60 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <FilterPanel size={16} />
-          Filtros
-        </button>
-        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-[#27AE60]/20 text-[#27AE60]' : 'text-white/40 hover:text-white'}`}
-          >
-            <Grid3X3 size={16} />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded transition-all ${viewMode === 'list' ? 'bg-[#27AE60]/20 text-[#27AE60]' : 'text-white/40 hover:text-white'}`}
-          >
-            <ListPanel size={16} />
-          </button>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#27AE60] hover:bg-[#219A52] text-white rounded-lg text-sm font-medium transition-all">
-          <PlusPanel size={16} />
-          Publicar
-        </button>
-      </div>
-    </header>
-  );
-
-  const FeaturedCarousel = () => {
-    useEffect(() => {
-      if (featuredListings.length === 0) return;
-      const interval = setInterval(() => {
-        setCurrentFeatured(prev => (prev + 1) % featuredListings.length);
-      }, 5000);
-      return () => clearInterval(interval);
-    }, [featuredListings]);
-
-    if (featuredListings.length === 0) return null;
-
-    return (
-      <div className="glass p-4 mb-6 fade-in">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white/80">Destacados</h2>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setCurrentFeatured(prev => (prev - 1 + featuredListings.length) % featuredListings.length)} className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-all">
-              <ChevronLeftPanel size={16} />
-            </button>
-            <button onClick={() => setCurrentFeatured(prev => (prev + 1) % featuredListings.length)} className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-all">
-              <ChevronRightPanel size={16} />
-            </button>
-          </div>
-        </div>
-        <div className="relative overflow-hidden">
-          <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${currentFeatured * 100}%)` }}>
-            {featuredListings.map(listing => (
-              <div key={listing.id} className="min-w-full flex gap-4">
-                <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
-                  <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 flex flex-col justify-center">
-                  <h3 className="text-lg font-semibold text-white">{listing.title}</h3>
-                  <p className="text-sm text-white/60 flex items-center gap-1 mt-1">
-                    <MapPinPanel size={14} />
-                    {listing.address}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <span className="text-xl font-bold text-[#27AE60]">{formatPrice(listing.price)}</span>
-                    {renderStars(listing.rating)}
-                  </div>
-                  <div className="flex items-center gap-3 mt-2">
-                    {listing.bedrooms > 0 && <span className="text-xs text-white/40 flex items-center gap-1"><Bed size={14} />{listing.bedrooms}</span>}
-                    {listing.bathrooms > 0 && <span className="text-xs text-white/40 flex items-center gap-1"><Bath size={14} />{listing.bathrooms}</span>}
-                    <span className="text-xs text-white/40 flex items-center gap-1"><Square size={14} />{listing.area}m²</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex justify-center gap-2 mt-4">
-          {featuredListings.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentFeatured(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${idx === currentFeatured ? 'bg-[#27AE60] w-6' : 'bg-white/20 hover:bg-white/40'}`}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const FilterSidebar = () => (
-    <div className={`w-72 flex-shrink-0 border-r border-white/5 bg-white/[0.01] p-4 overflow-y-auto transition-all duration-300 ${showFilters ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden p-0'}`}>
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-sm font-medium text-white/80 mb-3">Tipo de propiedad</h3>
-          <div className="space-y-2">
-            {[
-              { value: 'all', label: 'Todos' },
-              { value: 'apartment', label: 'Pisos' },
-              { value: 'house', label: 'Casas' },
-              { value: 'commercial', label: 'Locales' },
-            ].map(option => (
-              <button
-                key={option.value}
-                onClick={() => setCategoryFilter(option.value)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                  categoryFilter === option.value 
-                    ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium text-white/80 mb-3">Rango de precio</h3>
-          <div className="space-y-3">
+        <div className="p-6 space-y-4">
+          <div className="flex items-start justify-between">
             <div>
-              <label className="text-xs text-white/40">Mínimo: {formatPrice(priceRange[0])}</label>
-              <input
-                type="range"
-                min={0}
-                max={1000000}
-                step={10000}
-                value={priceRange[0]}
-                onChange={e => setPriceRange([Number(e.target.value), priceRange[1]])}
-                className="w-full mt-1"
-              />
+              <h2 className="text-2xl font-bold">{listing.title}</h2>
+              <p className="text-white/60 flex items-center gap-1 mt-1"><MapPin size={14} /> {listing.location}</p>
             </div>
-            <div>
-              <label className="text-xs text-white/40">Máximo: {formatPrice(priceRange[1])}</label>
-              <input
-                type="range"
-                min={0}
-                max={1000000}
-                step={10000}
-                value={priceRange[1]}
-                onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
-                className="w-full mt-1"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={priceRange[0]}
-                onChange={e => setPriceRange([Number(e.target.value), priceRange[1]])}
-                className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#27AE60]/50"
-                placeholder="0"
-              />
-              <span className="text-white/40">-</span>
-              <input
-                type="number"
-                value={priceRange[1]}
-                onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
-                className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#27AE60]/50"
-                placeholder="1.000.000"
-              />
+            <div className="text-right">
+              <p className="text-2xl font-bold gradient-text">{listing.price.toLocaleString()}€</p>
+              <div className="flex items-center gap-1 text-yellow-400 mt-1">
+                <Star size={16} fill="currentColor" /> {listing.rating}
+              </div>
             </div>
           </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium text-white/80 mb-3">Habitaciones</h3>
-          <div className="flex gap-2">
-            {[0, 1, 2, 3, 4].map(n => (
-              <button
-                key={n}
-                onClick={() => setMinBeds(n)}
-                className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
-                  minBeds === n 
-                    ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
-                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {n === 0 ? '+' : n}
-              </button>
+          <p className="text-white/70">{listing.description}</p>
+          <div className="flex gap-4 text-sm">
+            <span className="flex items-center gap-1"><Maximize size={14} /> {listing.size}m²</span>
+            <span className="flex items-center gap-1"><Home size={14} /> {listing.bedrooms} hab</span>
+            <span className="flex items-center gap-1"><DollarSign size={14} /> {listing.bathrooms} baños</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(listing.tags || []).map(tag => (
+              <span key={tag} className="px-3 py-1 bg-[#F18F01]/10 text-[#F18F01] rounded-full text-sm">{tag}</span>
             ))}
           </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium text-white/80 mb-3">Baños</h3>
-          <div className="flex gap-2">
-            {[0, 1, 2, 3, 4].map(n => (
-              <button
-                key={n}
-                onClick={() => setMinBaths(n)}
-                className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
-                  minBaths === n 
-                    ? 'bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20' 
-                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {n === 0 ? '+' : n}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium text-white/80 mb-3">Valoración</h3>
-          <div className="space-y-1">
-            {[0, 3, 3.5, 4, 4.5].map(rating => (
-              <button
-                key={rating}
-                onClick={() => setRatingFilter(rating)}
-                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all ${
-                  ratingFilter === rating 
-                    ? 'bg-[#27AE60]/10 text-[#27AE60]' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {rating === 0 ? 'Cualquiera' : renderStars(rating)}
-              </button>
-            ))}
+          <div className="flex gap-3">
+            <button className="flex-1 bg-[#2E86AB] hover:bg-[#2E86AB]/80 text-white py-3 rounded-xl font-semibold transition-all">Contactar</button>
+            <button className="p-3 border border-white/10 hover:border-white/20 rounded-xl transition-all"><Heart size={20} /></button>
+            <button className="p-3 border border-white/10 hover:border-white/20 rounded-xl transition-all"><Share2 size={20} /></button>
           </div>
         </div>
       </div>
     </div>
   );
+}
 
-  const ListingCard = ({ listing }) => {
-    const TypeIcon = typeIcons[listing.type] || Building2;
-    const [imgLoaded, setImgLoaded] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
-
-    return (
-      <div
-        onClick={() => setSelectedListing(listing)}
-        className={`glass overflow-hidden cursor-pointer group transition-all duration-200 hover:bg-white/[0.06] hover:border-white/20 fade-in`}
-        style={{ animationDelay: `${listing.id * 0.05}s` }}
-      >
-        <div className="relative h-48 bg-white/5 overflow-hidden">
-          {!imgLoaded && <div className="absolute inset-0 shimmer" />}
-          <img
-            src={listing.image}
-            alt={listing.title}
-            onLoad={() => setImgLoaded(true)}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-          />
-          <div className="absolute top-3 right-3 flex gap-2">
-            {listing.featured && (
-              <span className="px-2 py-0.5 bg-[#27AE60]/80 text-white text-xs rounded-full backdrop-blur-sm">Destacado</span>
-            )}
+function Sidebar({ selectedCategory, setSelectedCategory, priceRange, setPriceRange, minRating, setMinRating, sidebarOpen }) {
+  return (
+    <aside className={`w-72 flex-shrink-0 flex flex-col h-full border-r border-white/5 bg-white/[0.02] p-5 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
+      <div className="flex items-center gap-2 mb-6">
+        <Filter size={20} />
+        <h3 className="font-semibold">Filtros</h3>
+      </div>
+      
+      <div className="mb-6">
+        <h4 className="text-sm text-white/60 mb-3">Categorías</h4>
+        <div className="space-y-1">
+          {categories.map(cat => (
             <button
-              onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); showToast(isSaved ? 'Eliminado de favoritos' : 'Guardado en favoritos'); }}
-              className="p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                selectedCategory === cat ? 'bg-[#2E86AB]/20 text-[#2E86AB]' : 'hover:bg-white/5 text-white/70'
+              }`}
             >
-              <HeartPanel size={16} className={isSaved ? 'fill-red-500 text-red-500' : 'text-white'} />
+              {cat}
             </button>
-          </div>
-          <div className="absolute bottom-3 left-3">
-            <span className="px-2 py-0.5 bg-black/40 backdrop-blur-sm text-white text-xs rounded-full flex items-center gap-1">
-              <TypeIcon size={12} />
-              {typeLabels[listing.type]}
-            </span>
-          </div>
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="flex items-start justify-between">
-            <h3 className="text-sm font-semibold text-white group-hover:text-[#27AE60] transition-colors">{listing.title}</h3>
-          </div>
-          <p className="text-xs text-white/50 flex items-center gap-1">
-            <MapPinPanel size={12} />
-            {listing.address}
-          </p>
-          <div className="flex items-center gap-2 text-xs text-white/40">
-            {listing.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} />{listing.bedrooms}</span>}
-            {listing.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} />{listing.bathrooms}</span>}
-            <span className="flex items-center gap-1"><Square size={14} />{listing.area}m²</span>
-          </div>
-          <div className="flex items-center justify-between pt-2 border-t border-white/5">
-            <span className="text-lg font-bold text-[#27AE60]">{formatPrice(listing.price)}</span>
-            {renderStars(listing.rating)}
-          </div>
+          ))}
         </div>
       </div>
-    );
-  };
 
-  const ListingRow = ({ listing }) => {
-    const TypeIcon = typeIcons[listing.type] || Building2;
-    const [isSaved, setIsSaved] = useState(false);
-
-    return (
-      <div
-        onClick={() => setSelectedListing(listing)}
-        className="glass flex gap-4 p-4 cursor-pointer group transition-all duration-200 hover:bg-white/[0.06] hover:border-white/20 fade-in"
-        style={{ animationDelay: `${listing.id * 0.05}s` }}
-      >
-        <div className="w-40 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
-          <img src={listing.image} alt={listing.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <div className="mb-6">
+        <h4 className="text-sm text-white/60 mb-3">Precio máximo: {priceRange.toLocaleString()}€</h4>
+        <input
+          type="range"
+          min="50000"
+          max="1000000"
+          step="10000"
+          value={priceRange}
+          onChange={(e) => setPriceRange(Number(e.target.value))}
+          className="w-full accent-[#F18F01]"
+        />
+        <div className="flex justify-between text-xs text-white/40 mt-1">
+          <span>50.000€</span>
+          <span>1.000.000€</span>
         </div>
-        <div className="flex-1 flex flex-col justify-between">
-          <div>
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-white group-hover:text-[#27AE60] transition-colors">{listing.title}</h3>
-                <p className="text-xs text-white/50 flex items-center gap-1 mt-1">
-                  <MapPinPanel size={12} />
-                  {listing.address}
-                </p>
+      </div>
+
+      <div>
+        <h4 className="text-sm text-white/60 mb-3">Valoración mínima: {minRating}</h4>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map(star => (
+            <button key={star} onClick={() => setMinRating(star)} className={`transition-all ${star <= minRating ? 'text-yellow-400' : 'text-white/20'}`}>
+              <Star size={20} fill={star <= minRating ? 'currentColor' : 'none'} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function ListingCard({ listing, onQuickView }) {
+  return (
+    <div className="glass p-0 overflow-hidden fade-in group cursor-pointer" onClick={() => onQuickView(listing)}>
+      <div className="h-48 bg-gradient-to-br from-[#2E86AB]/20 to-[#F18F01]/20 flex items-center justify-center relative overflow-hidden">
+        <div className="text-4xl opacity-20 group-hover:scale-110 transition-transform duration-500"><Building size={64} /></div>
+        {listing.featured && (
+          <div className="absolute top-3 left-3 px-3 py-1 bg-[#F18F01] text-white text-xs font-semibold rounded-full">
+            Destacado
+          </div>
+        )}
+        <button className="absolute top-3 right-3 p-2 bg-black/40 hover:bg-black/60 rounded-full transition-all opacity-0 group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); }}>
+          <Heart size={16} />
+        </button>
+      </div>
+      <div className="p-4 space-y-2">
+        <div className="flex items-start justify-between">
+          <h3 className="font-semibold truncate max-w-[70%]">{listing.title}</h3>
+          <div className="flex items-center gap-1 text-yellow-400 text-sm">
+            <Star size={14} fill="currentColor" /> {listing.rating}
+          </div>
+        </div>
+        <p className="text-white/60 text-sm flex items-center gap-1"><MapPin size={12} /> {listing.location}</p>
+        <div className="flex items-center gap-4 text-xs text-white/50">
+          <span className="flex items-center gap-1"><Maximize size={12} /> {listing.size}m²</span>
+          <span className="flex items-center gap-1"><Home size={12} /> {listing.bedrooms} hab</span>
+        </div>
+        <p className="text-xl font-bold gradient-text">{listing.price.toLocaleString()}€</p>
+        <div className="flex flex-wrap gap-1.5">
+          {(listing.tags || []).slice(0, 3).map(tag => (
+            <span key={tag} className="px-2 py-0.5 bg-white/5 rounded text-xs">{tag}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeaturedCarousel({ listings, onQuickView }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const featured = useMemo(() => (listings || []).filter(l => l.featured), [listings]);
+
+  const next = useCallback(() => setCurrentIndex(prev => (prev + 1) % Math.max(featured.length, 1)), [featured.length]);
+  const prev = useCallback(() => setCurrentIndex(prev => (prev - 1 + featured.length) % Math.max(featured.length, 1)), [featured.length]);
+
+  useEffect(() => {
+    const timer = setInterval(next, 5000);
+    return () => clearInterval(timer);
+  }, [next]);
+
+  if (featured.length === 0) return null;
+
+  return (
+    <div className="relative mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold gradient-text">Destacados</h2>
+        <div className="flex gap-1">
+          <button onClick={prev} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-all"><ChevronLeft size={18} /></button>
+          <button onClick={next} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-all"><ChevronRight size={18} /></button>
+        </div>
+      </div>
+      <div className="overflow-hidden rounded-xl">
+        <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+          {featured.map(listing => (
+            <div key={listing.id} className="min-w-full flex-shrink-0 px-1">
+              <div className="glass p-0 overflow-hidden cursor-pointer" onClick={() => onQuickView(listing)}>
+                <div className="h-64 bg-gradient-to-br from-[#2E86AB]/30 to-[#F18F01]/30 flex items-center justify-center relative">
+                  <div className="text-6xl opacity-20"><Building size={96} /></div>
+                  <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-sm p-4 rounded-xl">
+                    <h3 className="text-xl font-bold">{listing.title}</h3>
+                    <p className="text-white/70 text-sm">{listing.location}</p>
+                    <p className="text-2xl font-bold gradient-text mt-1">{listing.price.toLocaleString()}€</p>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); showToast(isSaved ? 'Eliminado de favoritos' : 'Guardado en favoritos'); }}
-                className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
-              >
-                <HeartPanel size={16} className={isSaved ? 'fill-red-500 text-red-500' :
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  return (
+    <div className="flex items-center justify-center gap-2 mt-8">
+      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-30 transition-all">
+        <ChevronLeft size={18} />
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          className={`w-10 h-10 rounded-lg text-sm transition-all ${
+            page === currentPage ? 'bg-[#2E86AB] text-white' : 'bg-white/5 hover:bg-white/10 text-white/70'
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-30 transition-all">
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Todas');
+  const [priceRange, setPriceRange] = useState(1000000);
+  const [minRating, setMinRating] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [quickViewListing, setQuickViewListing] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('precio');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = ':root { --accent: #00C9A7; --accent2: #1E3A5F; }';
+      document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      const data = await apiFetch('/api/listings');
+      setListings(data || mockListings);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  const filteredListings = useMemo(() => {
+    let result = listings || [];
+    if (selectedCategory !== 'Todas') result = result.filter(l => l.category === selectedCategory);
+    if (searchQuery) result = result.filter(l => l.title.toLowerCase().includes(searchQuery.toLowerCase()) || l.location.toLowerCase().includes(searchQuery.toLowerCase()));
+    result = result.filter(l => l.price <= priceRange);
+    result = result.filter(l => l.rating >= minRating);
+    result.sort((a, b) => {
+      let val = sortBy === 'precio' ? a.price - b.price : sortBy === 'rating' ? a.rating - b.rating : a.size - b.size;
+      return sortOrder === 'asc' ? val : -val;
+    });
+    return result;
+  }, [listings, selectedCategory, searchQuery, priceRange, minRating, sortBy, sortOrder]);
+
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil((filteredListings || []).length / itemsPerPage);
+  const paginatedListings = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return (filteredListings || []).slice(start, start + itemsPerPage);
+  }, [filteredListings, currentPage]);
+
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, selectedCategory, priceRange, minRating]);
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#06080f] text-slate-100 font-[Inter]">
+      <Sidebar selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} priceRange={priceRange} setPriceRange={setPriceRange} minRating={minRating} setMinRating={setMinRating} sidebarOpen={sidebarOpen} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0">
+          <div className="flex items-center gap-4 flex-1">
+            <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <Filter size={18} />
+            </button>
+            <div className="relative flex-1 max-w-lg">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <input
+                type="text"
+                placeholder="Buscar viviendas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[#2E86AB] transition-all"
+              />
+            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-[#2E86AB]"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex border border-white/10 rounded-xl overflow-hidden">
+              <button onClick={() => setViewMode('grid')} className={`p-2 ${viewMode === 'grid' ? 'bg-[#2E86AB]/20 text-[#2E86AB]' : 'hover:bg-white/5'}`}><Grid3X3 size={16} /></button>
+              <button onClick={() => setViewMode('list')} className={`p-2 ${viewMode === 'list' ? 'bg-[#2E86AB]/20 text-[#2E86AB]' : 'hover:bg-white/5'}`}><List size={16} /></button>
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-[#2E86AB]"
+            >
+              <option value="precio">Precio</option>
+              <option value="rating">Valoración</option>
+              <option value="size">Tamaño</option>
+            </select>
+            <button onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')} className="p-2 hover:bg-white/5 rounded-lg transition-all">
+              <ArrowUpDown size={16} className="text-white/60" />
+            </button>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold gradient-text mb-2">InmoDirect</h1>
+            <p className="text-white/50">Vende y compra viviendas sin comisiones de terceros</p>
+          </div>
+
+          <div className="flex items-center gap-4 mb-6 text-sm text-white/50">
+            <span className="flex items-center gap-1"><Shield size={14} className="text-[#2E86AB]" /> Sin comisiones</span>
+            <span className="flex items-center gap-1"><TrendingUp size={14} className="text-[#F18F01]" /> Transparencia total</span>
+            <span className="flex items-center gap-1"><Users size={14} /> Propietarios directos</span>
+            <span className="flex items-center gap-1"><Clock size={14} /> Proceso ágil</span>
+          </div>
+
+          <FeaturedCarousel listings={listings} onQuickView={setQuickViewListing} />
+
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-white/50">{filteredListings.length} viviendas encontradas</p>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="glass p-0 overflow-hidden shimmer h-80" />
+              ))}
+            </div>
+          ) : paginatedListings.length === 0 ? (
+            <div className="text-center py-20 text-white/40">
+              <Building size={48} className="mx-auto mb-4 opacity-30" />
+              <p className="text-lg">No se encontraron viviendas con estos filtros</p>
+              <button onClick={() => { setSearchQuery(''); setSelectedCategory('Todas'); setPriceRange(1000000); setMinRating(1); }} className="mt-4 text-[#2E86AB] hover:underline">Limpiar filtros</button>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {paginatedListings.map(listing => (
+                <ListingCard key={listing.id} listing={listing} onQuickView={setQuickViewListing} />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {paginatedListings.map(listing => (
+                <div key={listing.id} className="glass p-4 flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-all fade-in" onClick={() => setQuickViewListing(listing)}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-[#2E86AB]/20 to-[#F18F01]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Building size={32} className="opacity-30" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold truncate">{listing.title}</h3>
+                    <p className="text-white/60 text-sm flex items-center gap-1"><MapPin size={12} /> {listing.location}</p>
+                    <div className="flex items-center gap-3 text-xs text-white/50 mt-1">
+                      <span>{listing.size}m²</span>
+                      <span>{listing.bedrooms} hab</span>
+                      <span className="flex items-center gap-1 text-yellow-400"><Star size={10} fill="currentColor" /> {listing.rating}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold gradient-text">{listing.price.toLocaleString()}€</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          )}
+        </main>
+      </div>
+      <QuickViewModal listing={quickViewListing} onClose={() => setQuickViewListing(null)} />
+    </div>
+  );
+}
