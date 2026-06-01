@@ -1,30 +1,27 @@
 {
   "app_type": "marketplace",
-  "app_name": "CasaDirecta",
+  "app_name": "InmoDirect",
   "tagline": "Vende y compra viviendas sin comisiones de terceros",
-  "primary_color": "#1E3A5F",
-  "accent_color": "#27AE60",
+  "primary_color": "#2E86AB",
+  "accent_color": "#F18F01",
   "sections": [
     "Hero",
-    "Search y filtros",
-    "Listados de viviendas",
-    "Detalle de propiedad",
-    "Testimonios",
-    "FAQ",
-    "Contacto"
+    "Listings",
+    "Search & Filters",
+    "Property Details",
+    "Seller Dashboard",
+    "How It Works"
   ],
   "backend_resources": [
-    "propiedades",
-    "usuarios",
-    "transacciones",
-    "imagenes",
-    "consultas"
+    "Property",
+    "User",
+    "Listing",
+    "Favorite",
+    "Inquiry"
   ],
   "features": [
-    "Búsqueda avanzada con filtros por precio, ubicación, tipo",
-    "Publicación directa de propiedades sin comisiones",
-    "Perfiles de vendedor y comprador",
-    "Alertas de propiedades coincidentes",
-    "Mensajería entre partes"
+    "Direct owner-to-buyer listings",
+    "Advanced search with filters (price, location, size)",
+    "No-commission transaction model"
   ]
 }
